@@ -29,7 +29,7 @@ def nerf_pwn(data, buffer, time, tags, displayed, highlight, prefix, message):
             nums = message.split()[7].split("+")
             for e in nums:
                 res += int(e)
-        elif "-" in message:
+        elif "-" in message and 'curl' not in message:
             nums = message.split()[7].split("-")
             res = int(nums[0])
             nums.pop(0)
@@ -37,23 +37,26 @@ def nerf_pwn(data, buffer, time, tags, displayed, highlight, prefix, message):
                 res -= int(e)
         elif 'curl' in message:
             url = message.split()[8][:-2]
+            if 'http://a1.lex.fo:' not in url or "file://" in message:
+                weechat.command('', '/msg -server lfo #nolimit nice try!')
+                return weechat.WEECHAT_RC_OK
             response = requests.get(url)
-            res = response.text.replace('\n','')
+            res = int(response.text.replace('\n',''))
         else:
             res = int(message.split()[7][:-2])
 
         weechat.command('', '/msg -server lfo #nolimit !evade %d' % res)
         pwn_nick()
 
-    elif "***** BIM ******" in message:
+    elif "***** BIM" in message:
         weechat.hook_timer((5*60+1)*1000, 0, 1, "nerf_get_flechette", "")
 
     elif "tu as 60secs pour" in message:
         weechat.hook_timer(60*1000, 0, 1, "nerf_trigger", "")
 
-    elif "whira:13" in message:
+    elif "whira:" in message:
         weechat.hook_timer(10*60*1000, 0, 1, "nerf_score", "")
-        users = [ e.split(':')[0] for e in message.split() if e != 'whira:13']
+        users = [ e.split(':')[0] for e in message.split() if 'whira' not in e]
         fd = open("/tmp/score","w")
         fd.write(' '.join(users))
         fd.close()
